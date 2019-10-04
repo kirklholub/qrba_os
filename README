@@ -163,6 +163,11 @@ How to Use:
 
     To get qrba exposed as a web service see apache/serversetup.txt
 
+To do:
+    Most functionality involving Activity objects has been implimented, but not fully tested.
+    Report objects were never fully implimented... no full specs ever provided
+    Documentation update
+
 Contact QRBA Open Source support at qrba_os.gsd@noaa.gov if needed.
 
 Good luck!
