@@ -1,0 +1,4 @@
+# QRBA crontab
+
+# sync clusterpaths to capture their usages
+*/5 * * * * /usr/local/bin/python2 /Users/holub/PycharmProjects/qrba/manage.py sync_clusterpaths_from_prod_to_dev 1> /qumuloadmin/qrba_admin/logs/sync_clusterpaths_from_prod_to_dev.log 2>&1

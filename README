@@ -1,0 +1,168 @@
+Overview:
+    QRBA (Qumulo Role Base Adminstration) is a web-based user interface which allows system administrators to create and remove NFS exports on a Qumulo storage system without requiring the Administrator's (user admin) login credentials.  See the attached overview.pdf file for a 'high-level' view of how QRBA interacts with an organization's infractruture. 
+
+Software Dependencies:
+    Python 2.7
+    django 1.11
+    qumulo API  (see README in directory qumulo)
+    
+Contact:
+    QRBA Open Source support at qrba_os.gsd@noaa.gov
+
+List of Files:
+    LICENSE -- license file
+    README -- this file
+    apache -- files needed to setup the app within apache
+    make_class_banners.py -- creates ASCII art text used to separate class declarations
+    manage.py  -- provided by django
+    overview.pdf -- a 'high-level' overview of how QRBA works 
+    provision -- main QRBA application name
+    qrba -- django project directory
+    qumulo -- qumulo API code (obtained from qumulo API)
+    sysads.txt -- use to setup accounts (using django User model) for system adminstrators 
+
+    Files in provision:
+        admin.py -- modifies the GUI
+        apps.py -- list of apps
+        management -- django mid-level directory
+        migrations -- django mid-level directory
+        models.py -- class definitions
+        signals.py -- required to register for post_save signals
+        static -- static content
+        templates
+        tests.py
+        urls.py
+        views.py
+    
+    Files in provision/management/commands: (assorted command files -- some are 'one off' for learning/testing/database-repairing)
+        Organization_checkHosts.py
+        add_nfsexports_from_file.py
+        add_users_from_file.py
+        checkDNS_dcs.py
+        checkHostip.py
+        checkHostname.py
+        checkIpzones.py
+        check_all_dev_quotas.py
+        check_all_host_organizations.py
+        check_hosts_by_org.py
+        check_int_vs_dev_mounts.py
+        check_prod_vs_dev_mounts.py
+        check_prod_vs_int_mounts.py
+        check_qrba.py
+        checkipzmarkers.py
+        clean_agg_stats.py
+        clean_all_stats.py
+        clean_system.py
+        fetch_clusterpaths.py
+        fetch_nfs_shares.py
+        getRestriction_get_adzones.py
+        getWinDC_adzones.py
+        getWinDC_groups.py
+        getWinDC_orgs.py
+        get_cluster_creds.py
+        get_cluster_slot_status.py
+        get_current_activity.py
+        get_current_connections.py
+        get_private_WinDC_hosts.py
+        initialize_activity_stats.py
+        initialize_dev_system.py
+        initialize_int_system.py
+        initialize_prod_system.py
+        load_activitytypes.py
+        load_cluster_time_series_types.py
+        load_days_in_dataset.py
+        load_host_activity_test_data.py
+        load_host_activity_test_randomdata.py
+        load_newWinDC_adzones.py
+        load_newWinDC_hosts.py
+        load_newWinDC_orgs.py
+        load_new_dmz_WinDC_hosts.py
+        remove_all_dev_cluster_items.py
+        remove_all_int_cluster_items.py
+        set_clusterpath_updater.py
+        set_ipzone_hostnames.py
+        set_nfsexport_updater.py
+        setup_dev_dmz_network.py
+        show_current_users.py
+        show_dev_dmz_network.py
+        show_sessions.py
+        sync_clusterpaths_from_cluster.py -- superceeded by source_to_destination versions
+        sync_clusterpaths_from_dev_to_dev.py
+        sync_clusterpaths_from_dev_to_int.py
+        sync_clusterpaths_from_int_to_dev.py
+        sync_clusterpaths_from_int_to_int.py
+        sync_clusterpaths_from_prod_to_dev.py  --- used to pull the current state from a 'production' cluster back into development
+        sync_clusterpaths_from_prod_to_int.py  --- pulls from production to integration
+        sync_clusterpaths_from_prod_to_prod.py  --- called by cron to check quota usages
+        sync_clusterpaths_to_cluster.py
+        sync_ips_in_adzones.py
+        sync_nfsexports_from_cluster.py
+        sync_nfsexports_from_dev_to_dev.py
+        sync_nfsexports_from_dev_to_int.py
+        sync_nfsexports_from_int_to_dev.py
+        sync_nfsexports_from_int_to_int.py
+        sync_nfsexports_from_prod_to_dev.py
+        sync_nfsexports_from_prod_to_int.py
+        sync_nfsexports_from_prod_to_prod.py
+        sync_nfsexports_to_cluster.py
+        test_find_ipzone_from_iplist.py
+        try_email.py
+        update_activity_stats.py
+        update_all_running_activity_stats.py
+        update_ipzmarker.py
+        update_whole_populations.py
+
+    Files in qrba:
+        context_processors.py
+        local_settings.py
+        settings.ini
+        settings.py
+        urls.py
+        wsgi.py
+
+    Files in apache:
+        seversetup.txt
+
+How to Use:
+    After the Software Dependencies have been satisfied, edit these configuration files if needed:
+        qumulo/setting.py 
+            ALLOWED_HOSTS
+            DATABASES
+            Any line containing 'qrbaadmin'
+            most settings starting with and after QUMULO_BASE_PATH (any line with 1.2.3.4 or 'tld')
+
+        /qumuloadmin/qrba_admin/config/ADcred  (legacy location -- these probably could be moved into settings.ini file)
+        qrba/settings.ini
+        sysads.txt 
+
+    Set domains in init and scripts:
+        get_private_WinDC_hosts.py:    dcs = WinDC.objects.get_queryset().filter(name='centrifyX.privatedomain.org.tld')
+        initialize_dev_system.py:      domains = ["d1.org.tld", "d2.org.tld", "org.private"]
+        initialize_int_system.py:      domain = "domain.org.tld"
+        initialize_prod_system.py:     domain = "domain.org.tld"
+        load_newWinDC_hosts.py:        dcs = WinDC.objects.get_queryset().filter(name='centrifyX.private.org.tld')
+        load_new_dmz_WinDC_hosts.py:   dcs = WinDC.objects.get_queryset().filter(name='centrifyX.private.org.tld')
+
+    The general setup sequence (for development system) is:
+        manage.py makemigrations provision
+        manage.py migrate
+        manage.py createsuperuser
+
+        manage.py add_users_from_file sysads.txt
+        manage.py initilize_dev_system
+
+        # these assume that a production cluster already exists and you want its state captured 
+        manage.py sync_clusterpaths_from_prod_to_dev
+        manage.py sync_nfsexports_from_prod_to_dev
+
+        # commands specifically to setup production:
+        # ./manage.py initilize_prod_system
+        # ./manage.py sync_clusterpaths_from_prod_to_prod
+        # ./manage.py sync_nfsexpors_from_prod_to_prod
+
+
+    To get qrba exposed as a web service see apache/serversetup.txt
+
+Contact QRBA Open Source support at qrba_os.gsd@noaa.gov if needed.
+
+Good luck!

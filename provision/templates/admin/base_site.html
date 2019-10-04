@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {% trans 'Qumulo Role-Based Administration' %} ({{ deploy_env }}){% endblock %}
+
+{% block extrastyle %}
+    {% if deploy_env_color %}
+        <style>
+            #header {
+                background-color: {{ deploy_env_color }};
+                border-bottom: solid 3px #999;
+            }
+        </style>
+    {% endif %}
+{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name">{% trans 'Qumulo Role-Based Administration' %} ({{ deploy_env }})</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

@@ -1,0 +1,110 @@
+# steps needed to get qrba running
+
+# Decided to go with mysql community since mariadb (the RHEL default database) does not support sql_mode='STRICT_ALL_TABLES' and django issues a warning message
+# Fetched yum config rpm from dev.mysql.com:  mysql57-community-release-el7-11.noarch.rpm
+# sudo su -
+# -- stop iptables or insure traffic to 'http://repo.mysql.com' is enabled
+# yum install mysql57-community-release-el7-11.noarch.rpm
+# yum install mysql-community-server
+# record root password (set during mysql_secure_installation) in /root/mysql_password
+#   -- grep 'password' /var/log/mysqld.log 
+# yum install mysql-connector-python
+# yum install MySQL-python
+# systemctl enable mysqld.service 
+# systemctl start  mysqld.service
+# mysql_secure_installation
+
+
+install git
+
+
+# Install apache wsgi config for qrba
+# contents of: /etc/httpd/conf.d/qrba.conf:
+# begin qrba setup
+WSGIScriptAlias /qrba /qrbaadmin/qrba/qrba/wsgi.py
+WSGIPythonPath /qrbaadmin/qrba
+
+<Directory /qrbaadmin/qrba/qrba>
+<Files wsgi.py>
+Require all granted
+</Files>
+</Directory>
+# end qrba setup and qrba.conf
+
+# create locations for the django app, its config, its log files, and a location for static content
+mkdir -p /qrbaadmin/qrba
+mkdir -p /qrbaadmin/qrba_admin/config
+mkdir -p /qrbaadmin/qrba_admin/logs
+mkdir -p /var/www/html/static
+
+chown -R apache:apache /qrbaadmin
+chown -R apache:apache /var/www/html
+
+
+# install required python packages (only one so far)
+#mkdir -p /qumloadmin/imports
+#chdir /qrbaadmin/imports
+#curl -o ipaddr-2.2.0.tar.gz  https://pypi.python.org/packages/9d/a7/1b39a16cb90dfe491f57e1cab3103a15d4e8dd9a150872744f531b1106c1/ipaddr-2.2.0.tar.gz
+#gunzip ipaddr-2.2.0.tar.gz
+#cd /qrbaadmin/imports/ipaddr-2.2.0
+#python setup.py install
+
+pip install django ipaddr
+
+# make SELINUX happy 
+chcon -R -u system_u -t httpd_sys_content_t /qrbaadmin
+chcon -R -u system_u -t httpd_log_t /qrbaadmin/qrba_admin/logs
+chcon -R -u system_u -t httpd_config_t /qrbaadmin/qrba_admin/config
+chcon -R -u system_u -t httpd_sys_content_t /var/www/html
+chcon -R -u system_u /var/www/html/static
+chcon -R -u system_u /etc/http/conf.d/qrba.conf
+setsebool -P httpd_can_network_connect_db on
+
+
+# install the qrba app
+# pull latest from repo
+cd /some/path/you/chose
+# if QRBA exits, remove it
+/bin/rm -rf QRBA
+git clone QRBA
+
+# copy files to a location not within apache's view and give them to apache
+cd /qrbaadmin/qrba
+/bin/cp -rf /some/path/you/chose/QRBA/* .
+chown -R apache:apache .
+
+# copy files to the 'static' location -- which is defined in /qrbaadmin/qrba/qrba/setting.py
+cd /qrbaadmin/qrba
+python manage.py collectstatic
+
+# edit qrba/qrba.settings
+#    set DEBUG to FALSE
+#    uncomment the appropriate DEPLOY_ENV
+#     search for 'qrba'
+#         update DATABASES.default.read_default_file as needed
+#         update 'development_logfile', 'info_logfile', 'production_logfile' -- add environment id -- ie.   django_int_info.log  for integration environment
+
+# edit qrba/provision/templates/base.html
+#   insure URL points to the correct server -- WE DO NOT WANT int pointing back to prod or vice versa
+
+# if this is a re-install, consider editing all logfiles in /qrbaadmin/qrba_admin/logs to remove old info -- optional
+# generically
+# cd /qrbaadmin/qrba
+# ./manage.py makemigrations provision
+# ./manage.py migrate
+# ./manage.py createsuperuser
+
+# on prod edit sysads.txt and add 'prod' to beginning of each password
+
+# ./manage.py add_users_from_file sysads.txt
+# ./manage.py initilize_[int,prod]_system
+# ./manage.py sync_clusterpaths_from_[prod,int]_to_[prod,int]
+# ./manage.py sync_nfsexports_from_[prod,int]_to_{prod,int]
+
+# last the commands specifically to setup production:
+# ./manage.py initilize_prod_system
+# ./manage.py sync_clusterpaths_from_prod_to_prod
+# ./manage.py sync_nfsexpors_from_prod_to_prod
+
+# start httpd
+# service httpd start

@@ -1,0 +1,3 @@
+# Production QRBA
+# sync clusterpaths to capture their current (storage space) usages
+0 * * * * /usr/bin/python2 /qrbaadmin/qrba/manage.py sync_clusterpaths_from_prod_to_prod 1> /qrbaadmin/qrba_admin/logs/prod_sync_clusterpaths_from_prod_to_prod.log 2>&1

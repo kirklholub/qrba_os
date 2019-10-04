@@ -1,0 +1,4 @@
+#format:
+#username:password:email:is_a_superuser:[comma-delimited-list-of-organizations]
+root:atoken4root:qrba.root@someorg.tld:True:[HOMEORG]
+guest:givemedata:noreply@someorg.tld:False:[HOMEORG, ORG1, ORG2]
